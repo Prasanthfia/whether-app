@@ -1,0 +1,137 @@
+@@ -0,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather App</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  }
+  .card {
+    width: 360px; border-radius: 28px; overflow: hidden;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .top {
+    padding: 36px 32px 28px;
+    background: linear-gradient(135deg, rgba(100,160,255,0.2), rgba(80,220,200,0.1));
+    position: relative; overflow: hidden;
+  }
+  .top::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(100,180,255,0.1);
+  }
+  .search { display: flex; gap: 8px; margin-bottom: 28px; }
+  .search input {
+    flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px; padding: 10px 14px; color: #fff;
+    font-family: 'Outfit'; font-size: 14px; outline: none;
+  }
+  .search input::placeholder { color: rgba(255,255,255,0.4); }
+  .search button {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; padding: 10px 16px; border-radius: 10px;
+    cursor: pointer; font-size: 16px; transition: background 0.2s;
+  }
+  .search button:hover { background: rgba(255,255,255,0.25); }
+  .city { color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 300; margin-bottom: 4px; }
+  .cityname { color: #fff; font-size: 26px; font-weight: 600; margin-bottom: 20px; }
+  .weather-main { display: flex; align-items: center; justify-content: space-between; }
+  .temp { font-size: 80px; font-weight: 200; color: #fff; line-height: 1; }
+  .temp span { font-size: 32px; font-weight: 300; vertical-align: super; }
+  .icon { font-size: 80px; filter: drop-shadow(0 0 20px rgba(255,200,50,0.4)); }
+  .desc { color: rgba(255,255,255,0.7); font-size: 16px; margin-top: 8px; font-weight: 300; text-transform: capitalize; }
+  .bottom { padding: 24px 32px 28px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat { text-align: center; }
+  .stat-val { color: #fff; font-size: 20px; font-weight: 600; }
+  .stat-label { color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .forecast { display: flex; gap: 10px; }
+  .fday {
+    flex: 1; background: rgba(255,255,255,0.06); border-radius: 14px;
+    padding: 12px 8px; text-align: center; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .fday-name { color: rgba(255,255,255,0.5); font-size: 11px; margin-bottom: 8px; }
+  .fday-icon { font-size: 22px; margin-bottom: 6px; }
+  .fday-temp { color: #fff; font-size: 14px; font-weight: 600; }
+  .divider { height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 20px; }
+  .forecast-title { color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top">
+    <div class="search">
+      <input id="cityInput" type="text" placeholder="Search city..." onkeydown="if(event.key==='Enter')loadWeather()">
+      <button onclick="loadWeather()">🔍</button>
+    </div>
+    <div class="city">Current Weather</div>
+    <div class="cityname" id="cityname">Chennai, IN</div>
+    <div class="weather-main">
+      <div>
+        <div class="temp"><span></span><span id="temp">32</span>°</div>
+        <div class="desc" id="desc">Partly Cloudy</div>
+      </div>
+      <div class="icon" id="icon">⛅</div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="humidity">72%</div><div class="stat-label">Humidity</div></div>
+      <div class="stat"><div class="stat-val" id="wind">18 km/h</div><div class="stat-label">Wind</div></div>
+      <div class="stat"><div class="stat-val" id="feels">34°</div><div class="stat-label">Feels Like</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="forecast-title">5-Day Forecast</div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+</div>
+<script>
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weathers = [
+    {icon:'☀️',desc:'Sunny',t:35}, {icon:'⛅',desc:'Partly Cloudy',t:30},
+    {icon:'🌧️',desc:'Rainy',t:25}, {icon:'⛈️',desc:'Thunderstorm',t:22},
+    {icon:'🌤️',desc:'Mostly Clear',t:32}
+  ];
+  const cities = {
+    'chennai':{name:'Chennai, IN',temp:32,desc:'Partly Cloudy',icon:'⛅',humidity:'72%',wind:'18 km/h',feels:'34°'},
+    'mumbai':{name:'Mumbai, IN',temp:30,desc:'Humid',icon:'🌤️',humidity:'85%',wind:'22 km/h',feels:'36°'},
+    'delhi':{name:'Delhi, IN',temp:38,desc:'Sunny & Hot',icon:'☀️',humidity:'40%',wind:'12 km/h',feels:'41°'},
+    'london':{name:'London, UK',temp:14,desc:'Overcast',icon:'🌥️',humidity:'78%',wind:'30 km/h',feels:'12°'},
+    'tokyo':{name:'Tokyo, JP',temp:22,desc:'Clear',icon:'🌤️',humidity:'60%',wind:'15 km/h',feels:'22°'},
+  };
+
+  function renderForecast() {
+    const today = new Date().getDay();
+    document.getElementById('forecast').innerHTML = [0,1,2,3,4].map(i => {
+      const w = weathers[i];
+      const d = days[(today+i+1)%7];
+      return `<div class="fday"><div class="fday-name">${d}</div><div class="fday-icon">${w.icon}</div><div class="fday-temp">${w.t}°</div></div>`;
+    }).join('');
+  }
+
+  function loadWeather() {
+    const q = document.getElementById('cityInput').value.trim().toLowerCase();
+    const data = cities[q] || cities['chennai'];
+    document.getElementById('cityname').textContent = data.name;
+    document.getElementById('temp').textContent = data.temp;
+    document.getElementById('desc').textContent = data.desc;
+    document.getElementById('icon').textContent = data.icon;
+    document.getElementById('humidity').textContent = data.humidity;
+    document.getElementById('wind').textContent = data.wind;
+    document.getElementById('feels').textContent = data.feels;
+    document.getElementById('cityInput').value = '';
+  }
+  renderForecast();
+</script>
+</body>
+</html>
